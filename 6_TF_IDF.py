@@ -1,12 +1,12 @@
 import csv
 import numpy as np
 
-with open("C:/Users/User/Documents/Machine Learning/social listening project/DataStopwordLemma.csv", encoding="utf-8") as f:
+with open("/content/rsuk/DataStopwordLemma.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     data_list = [row for row in reader]
 f.close()
 
-with open("C:/Users/User/Documents/Machine Learning/social listening project/Vocab.csv", encoding="utf-8") as f:
+with open("/content/rsuk/Vocab.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     vocab_set = []
     for i in reader:
@@ -51,9 +51,9 @@ def tf_idf(doc_list):
             tf_idf_list[i] = tf_dict[vocab_set[i]]*idf_dict[vocab_set[i]]
     return tf_idf_list
 
-f = open("C:/Users/User/Documents/Machine Learning/social listening project/tf_idf.csv",mode='w',encoding='utf-8')
+f = open("/content/rsuk/tf_idf.csv",mode='w',encoding='utf-8')
 f.close()
-with open("C:/Users/User/Documents/Machine Learning/social listening project/tf_idf.csv",mode="a",encoding="utf-8") as out:
+with open("/content/rsuk/tf_idf.csv",mode="a",encoding="utf-8") as out:
     writer = csv.writer(out,delimiter=',',lineterminator='\n')
     for i in data_list:
         a = tf_idf(i)

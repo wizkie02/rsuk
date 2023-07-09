@@ -33,7 +33,6 @@ def lemmatization(sentence):
     # chuyển các thẻ sang dạng dễ hiểu hơn, chi tiết thì print cái trên vs cái dưới rồi so sánh
     wordnet_tagged = list(map(lambda x: (x[0], pos_tagger(x[1])), pos_tagged))
     #print(wordnet_tagged)
- 
     lemmatized_sentence = []
     for word, tag in wordnet_tagged:
         if tag is None:
@@ -51,29 +50,31 @@ wordlist_lowercased = set(i.lower() for i in brown.words())|{"biden","ukraine","
 # tạo list lưu vocaburary
 vocabulary=[]
 # tạo file lưu data mới
-f = open("C:/Users/User/Documents/Machine Learning/social listening project/DataStopwordLemma.csv",mode='w',encoding='utf-8')
+f = open("/content/rsuk/DataStopwordLemma.csv",mode='w',encoding='utf-8')
 f.close()
 # mở file data và lấy dữ liệu dưới dạng list 
-with open("C:/Users/User/Documents/Machine Learning/social listening project/DataUseful.csv",encoding="utf-8") as f:
+with open("/content/rsuk/DataCleaned.csv",encoding="utf-8") as f:
     reader = csv.reader(f)
     l = [row for row in reader]
-
+l
 # lưu những rows dùng được đồng thời thêm từ mới vào vocab
-with open("C:/Users/User/Documents/Machine Learning/social listening project/DataStopwordLemma.csv",mode="a",encoding='utf-8') as out:
+with open("/content/rsuk/DataStopwordLemma.csv",mode="a",encoding='utf-8') as out:
     writer = csv.writer(out,delimiter=',',lineterminator='\n')
     count = 0
     for i in range(0,len(l)):
-        a=lemmatization(cham(l[i][2]))
+        a=lemmatization(l[i][0])
         writer.writerow(a)
-        print(i)
+        print("Line:",i)
         # thêm những từ mới vào vocab
         for j in a:
             if j not in vocabulary:
                 vocabulary.append(j)
+                print("New word: ",j)
 # tạo và lưu file vocab
-f = open("C:/Users/User/Documents/Machine Learning/social listening project/Vocab.csv",mode='w',encoding='utf-8')
+f = open("/content/rsuk/Vocab.csv",mode='w',encoding='utf-8')
 f.close()
-with open("C:/Users/User/Documents/Machine Learning/social listening project/Vocab.csv",mode="a",encoding="utf-8") as out:
+with open("/content/rsuk/Vocab.csv",mode="a",encoding="utf-8") as out:
     writer = csv.writer(out,lineterminator='\n')
     for i in vocabulary:
         writer.writerow([i])
+print("File vocab đã được tạo và lưu thành công.")

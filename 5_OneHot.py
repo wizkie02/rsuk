@@ -2,7 +2,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 import csv
 
-with open("C:/Users/User/Documents/Machine Learning/social listening project/Vocab.csv",encoding="utf-8") as f:
+with open("/content/rsuk/Vocab.csv",encoding="utf-8") as f:
     reader = csv.reader(f)
     l = [row for row in reader]
 f.close()
