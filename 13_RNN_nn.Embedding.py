@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
+import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 import sklearn
@@ -12,37 +13,15 @@ from torch.nn.utils.rnn import pad_sequence
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")     
-from google.colab import drive
-drive.mount('/content/drive')
 
-with open("/content/drive/MyDrive/data_stopword_2.csv", encoding="utf-8") as f:
+with open("/content/rsuk/DataStopwordLemma.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     data_list=[row for row in reader]
+
+df = pd.read_csv("/content/rsuk/DataCleaned.csv",delimiter=',')
+label_list = df["Label"].tolist()
 # word list
-
-with open("/content/drive/MyDrive/DataUseful.csv", encoding="utf-8") as f:
-    reader = csv.reader(f)
-    label_list = [row for row in reader]
-    label_list = label_list
-    # 0 = Ukraina and 1 = Nga
-    for i in range(0,len(label_list)):
-      if len(data_list[i])==0:
-        label_list.pop(i)
-    for i in range(0,len(label_list)):
-        if label_list[i][1]=="U":
-            label_list[i]=0
-        else: 
-            label_list[i]=1
-#  label
-
-count=0
-while count<len(data_list):
-  if (len(data_list[count])==0):
-    data_list.pop(count)
-    count=-1
-  count+=1
-
-with open("/content/drive/MyDrive/Vocab2.csv", encoding="utf-8") as f:
+with open("/content/rsuk/Vocab.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     vocab = [row[0] for row in reader]
 
@@ -58,7 +37,7 @@ data = text_to_index(data_list)
 # đưa data về cùng kích thước của câu có số từ nhiều nhất
 data_padded = pad_sequence(data,batch_first=True)
 
-label = torch.tensor(label_list,dtype=torch.float64)
+label = torch.tensor(label_list, dtype=torch.float32)
 
 X_train_val, X_test, y_train_val, y_test = model_selection.train_test_split(data_padded, label, train_size=8/10,test_size=2/10, random_state=0)
 X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train_val, y_train_val, train_size=7/8,test_size=1/8, random_state=0)
@@ -89,7 +68,7 @@ class RNNModel(nn.Module):
         return outputs
 
 epochs = 100
-# số featue của 1 từ
+# số feature của 1 từ
 num_embeddings = len(vocab)
 input_dim = 100
 hidden_dim = 10
@@ -146,26 +125,7 @@ for epoch in tqdm((range(epochs)),desc='Training Epochs'):
             losses.append(loss_mini.item())
             
     print(f"\nVal - Loss: {loss_val.item()}. Accuracy: {accuracy_val}")
-    print(f"Mini_batch -  Loss: {loss_mini.item()}. Accuracy: {accuracy_mini}")
     print("----------------------------------------------------------------------------------")
-
-    if epoch == 0 or epoch ==1 :
-        torch.save(model, 'last_model.pth')
-        continue
-    output=torch.squeeze(outputs)
-    for i in output:
-      if torch.isnan(i):
-        model = torch.load('last_model.pth')
-        quit()
-    if ( losses_val[-1] - losses_val[-3]<=10e-6 ) :
-        count_stop+=1
-        if count_stop == patience :
-            model = torch.load('last_model.pth')
-            break
-    else:
-        count_stop = 0
-        torch.save(model, 'last_model.pth')
-
 a = [i for i in range(count_batch)]
 # plt.plot(a,losses_val)
 plt.plot(a,losses)
