@@ -61,7 +61,7 @@ l
 with open("/content/rsuk/DataStopwordLemma.csv",mode="a",encoding='utf-8') as out:
     writer = csv.writer(out,delimiter=',',lineterminator='\n')
     count = 0
-    for i in range(0,len(l)):
+    for i in range(1,len(l)):
         a=lemmatization(l[i][0])
         writer.writerow(a)
         print("Line:",i)
