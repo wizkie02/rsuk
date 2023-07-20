@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
+import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 import sklearn
@@ -11,29 +12,14 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.nn.utils.rnn import pad_sequence
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using {device} device")     
-from google.colab import drive
-drive.mount('/content/drive')
-
-with open("/content/drive/MyDrive/data_stopword_2.csv", encoding="utf-8") as f:
+print(f"Using {device} device")
+with open("/content/rsuk/DataStopwordLemma.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     data_list=[row for row in reader]
 # word list
 
-with open("/content/drive/MyDrive/DataUseful.csv", encoding="utf-8") as f:
-    reader = csv.reader(f)
-    label_list = [row for row in reader]
-    label_list = label_list
-    # 0 = Ukraina and 1 = Nga
-    for i in range(0,len(label_list)):
-      if len(data_list[i])==0:
-        label_list.pop(i)
-    for i in range(0,len(label_list)):
-        if label_list[i][1]=="U":
-            label_list[i]=0
-        else: 
-            label_list[i]=1
-#  label
+df = pd.read_csv("/content/rsuk/DataCleaned.csv",delimiter=',')
+label_list = df["Label"].tolist()
 
 count=0
 while count<len(data_list):
@@ -42,7 +28,7 @@ while count<len(data_list):
     count=-1
   count+=1
 
-with open("/content/drive/MyDrive/Vocab2.csv", encoding="utf-8") as f:
+with open("/content/rsuk/Vocab.csv", encoding="utf-8") as f:
     reader = csv.reader(f)
     vocab = [row[0] for row in reader]
 
@@ -57,31 +43,24 @@ def text_to_index(X_text):
 data = text_to_index(data_list)
 # đưa data về cùng kích thước của câu có số từ nhiều nhất
 data_padded = pad_sequence(data,batch_first=True)
-
 label = torch.tensor(label_list,dtype=torch.float64)
-
 X_train_val, X_test, y_train_val, y_test = model_selection.train_test_split(data_padded, label, train_size=8/10,test_size=2/10, random_state=0)
 X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train_val, y_train_val, train_size=7/8,test_size=1/8, random_state=0)
 
 class LSTMModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, layer_dim, output_dim):
         super(LSTMModel, self).__init__()
-
         self.hidden_dim = hidden_dim
-
         self.layer_dim = layer_dim
-
         self.lstm = nn.LSTM(input_dim, hidden_dim, layer_dim, batch_first=True)
-
         self.fc = nn.Linear(hidden_dim, output_dim)
-
     def forward(self, x):
-        h0 = torch.zeros(self.layer_dim, x.shape[0], self.hidden_dim)
-        c0 = torch.zeros(self.layer_dim, x.shape[0], self.hidden_dim)
-
+        h0 = torch.zeros(self.layer_dim, x.shape[0], self.hidden_dim).to(device)
+        c0 = torch.zeros(self.layer_dim, x.shape[0], self.hidden_dim).to(device)
         out, (hn, cn) = self.lstm(x, (h0, c0))
-
+        print(out.shape())
         outputs = torch.sigmoid(self.fc(hn)+1e-6)
+        print(outputs.shape())
         return outputs
 
 epochs = 100
@@ -97,7 +76,7 @@ batch_size = 32
 # chia batch_size
 train = TensorDataset(X_train,y_train)
 train_loader = DataLoader(train, batch_size = batch_size, shuffle = True)
-model = RNNModel(input_dim, hidden_dim, layer_dim, output_dim, num_embeddings)
+model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim).to(device)
 loss_function = torch.nn.BCELoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
@@ -112,7 +91,6 @@ for epoch in tqdm((range(epochs)),desc='Training Epochs'):
     for i, (X_mini, y_mini) in enumerate(train_loader):
         # print("X:",X_mini.shape)
         count_batch+=1
-    
         optimizer.zero_grad()   
         outputs = model(X_mini) 
         # print(outputs.shape) 
